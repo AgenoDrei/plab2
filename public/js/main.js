@@ -1,3 +1,5 @@
+let g = null;
+
 function main() {
     console.log('Page loaded!');
 
@@ -9,6 +11,7 @@ function main() {
 
     const graph_view = new D3Graph(window.innerWidth * 0.6, window.innerHeight * 0.7);
     graph_view.draw_graph(dummy_graph.nodes, dummy_graph.edges)
+    g = graph_view;
 }
 
 

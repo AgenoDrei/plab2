@@ -25,6 +25,7 @@ class Graph {
 
     add_edge(src, dst) {
         let edge = new Edge(src, dst);
+        this.get_node(dst).num_incoming++;
         this.edges.push(edge);
     }
 
@@ -60,7 +61,8 @@ class Node {
         this.id = cur_node_id++;
         this.group = group;
         this.out = [];
-        this.active = is_active
+        this.active = is_active;
+        this.num_incoming = 0;
     }
 }
 

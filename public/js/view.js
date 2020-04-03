@@ -1,3 +1,5 @@
+let self = null;
+
 class D3Graph {
     constructor(width, height) {
         this.width = width;
@@ -10,9 +12,9 @@ class D3Graph {
         this.zoom_handler = d3.zoom()
             .on("zoom", () => this.g.attr("transform", d3.event.transform));
         this.zoom_handler(this.svg);
-
-
         this.group2color = d3.scaleOrdinal(d3.schemeCategory10);
+        this.selection = null;
+        self = this;
     }
 
     draw_graph(node_list, edge_list) {
@@ -54,8 +56,11 @@ class D3Graph {
             .data(node_list)
             .enter().append("g");
         this.circles = this.node.append("circle")
-            .attr("r", 5)
-            .attr("fill", d => this.group2color(d.group));
+            .attr("r", d => 3 + d.num_incoming)
+            .attr("fill", d => this.group2color(d.group))
+            .on("mouseover", this.handleMouseOver)
+            .on("mouseout", this.handleMouseOut)
+            .on("click", this.handleClick);
         this.lables = this.node.append("text")
             .classed("node_labels", true)
             .text(d => d.id);
@@ -77,4 +82,68 @@ class D3Graph {
         });
         return this.svg;
     }
+
+    highlightElement(elm) {
+        const circleUnderMouse = elm;
+        d3.selectAll('circle').transition().style('opacity', function () {
+            if (circleUnderMouse === null) {
+                return 0.8;
+            } else if (this === circleUnderMouse) {
+                return 0.8;
+            } else {
+                return 0.3;
+            }
+        });
+        d3.selectAll('line').transition().style('opacity', function (l) {
+            if (circleUnderMouse === null) {
+                return 0.9;
+            } else if (circleUnderMouse.__data__.id === l.source.id || circleUnderMouse.__data__.id === l.target.id) {
+                return 0.9;
+            } else {
+                return 0.2;
+            }
+        });
+    }
+
+    labelClusterCenter(text, clusterId) {
+        let count = 0, x = 0.0, y = 0.0;
+        d3.selectAll('circle')
+            .each(function (d) {
+                if (d.group === clusterId) {
+                    x += d.x;
+                    y += d.y;
+                    count++;
+                }
+            });
+        this.g.append('text')
+            .attr('id', 'clusterLabel' + clusterId)
+            .attr('class', 'clusterLabel')
+            .attr('x', x / count).attr('y', y / count)
+            .text(text);
+        console.log('Cluster center: ', x / count, y / count);
+    }
+
+    handleMouseOut(d, i) {
+        if (self.selection == null)
+            self.highlightElement(null);
+    }
+
+    handleMouseOver(d, i) {
+        if (self.selection == null)
+            self.highlightElement(this);
+    }
+
+    handleClick(d, i) {
+        console.log('Click', i);
+        if (self.selection === this) {
+            self.selection = null;
+            self.highlightElement(null);
+        } else if (self.selection === null || self.selection !== this) {
+            self.selection = this;
+            self.highlightElement(this);
+            show_details(this.__data__.id);
+        }
+    }
+
+
 }
